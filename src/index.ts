@@ -1,4 +1,4 @@
-import { writeFile } from "fs/promises";
+import { mkdir, rm, writeFile } from "fs/promises";
 import puppeteer, { Page } from "puppeteer";
 import { doMove } from "./do-move";
 import { parseBoard } from "./parse-board";
@@ -22,10 +22,13 @@ const main = async () => {
   });
   let page: Page | undefined;
 
+  await rm("output", { recursive: true });
+  await mkdir("output", { recursive: true });
+
   const writeFailureScreenshot = async () => {
     if (page != null) {
       console.log("Fail, writing screenshot as fail.png!");
-      await writeFile("./fail.png", await page.screenshot());
+      await writeFile("output/fail.png", await page.screenshot());
     }
   };
 
@@ -47,6 +50,15 @@ const main = async () => {
     for (let turn = 1; ; turn++) {
       // Parse the board to determine the current state.
       console.log("starting loop", turn);
+
+      // Write the board as png, except before the first turn.
+      if (turn > 1) {
+        const turnPng = `output/turn${turn.toString().padStart(3, "0")}.png`;
+        writeFile(turnPng, await page.screenshot()).then(() =>
+          console.log("  wrote", turnPng, "before parse")
+        );
+      }
+
       const board = await parseBoard(game);
       console.log("  parsed board!");
       await doMove(board, turn);

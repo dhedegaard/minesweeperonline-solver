@@ -51,7 +51,9 @@ export const doMove = async (
           adjacent.y,
           adjacent.state
         );
-        hasChanged = true;
+        // return here to avoid potentially flagging the same position multiple
+        // times, feel free to optimize this later.
+        return;
       }
     }
     if (state.count > adjacentBlankSquares.length) {
