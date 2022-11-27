@@ -32,6 +32,8 @@ const parseBoard = async (game: ElementHandle) =>
           switch (data.className) {
             case "square blank":
               return { type: "blank" } as const;
+            case "square bombflagged":
+              return { type: "bomb" } as const;
             case "square open0":
               return { type: "open", count: 0 } as const;
             case "square open1":
@@ -71,16 +73,91 @@ const doMove = async (
     return;
   }
 
-  // Iterate on all the elemnts and decide on whether to mark a bomb or click a field.
-  throw new Error("TODO: do something here :)");
+  let hasChanged = false;
+
+  // Look for squares with numbers and the same number of open or flagged squares.
+  for (const { state, x, y } of board) {
+    if (state.type !== "open" || state.count < 1) {
+      continue;
+    }
+
+    const adjacentBlankSquares = board.filter(
+      (e) =>
+        e.x >= x - 1 &&
+        e.x <= x + 1 &&
+        e.y >= y - 1 &&
+        e.y <= y + 1 &&
+        !(e.x === x && e.y === y) &&
+        (e.state.type === "blank" || e.state.type === "bomb")
+    );
+    // There's the same number of adjacent non-open squares as the number, which
+    // means everything around the current position is a bomb. Mark positions
+    // not already marked as a bomb.
+    if (state.count === adjacentBlankSquares.length) {
+      for (const adjacent of adjacentBlankSquares.filter(
+        (e) => e.state.type === "blank"
+      )) {
+        await adjacent.handle.click({ button: "right" });
+        hasChanged = true;
+      }
+    }
+    if (state.count > adjacentBlankSquares.length) {
+      throw new Error(
+        "BUG, the number of adjacent bombs is greater than the number of blank fields."
+      );
+    }
+  }
+
+  // TODO: Implement various other strategies for determining safe actions to
+  // do without resorting to random moves.
+
+  // If something changed, just click all the open squares with numbers on it,
+  // to see if we can trigger a valid move.
+  if (hasChanged) {
+    console.log(
+      "Something changed, clicking all open squares with numbers on it"
+    );
+    for (const e of board.filter(
+      (e) => e.state.type === "open" && e.state.count > 0
+    )) {
+      await e.handle.click();
+    }
+  }
+
+  // All hope is lost, just click something random.
+  if (!hasChanged) {
+    const randomSquare = board[Math.floor(Math.random() * board.length)]!;
+    console.warn(
+      "No safe moves, clicking random square:",
+      randomSquare.x,
+      randomSquare.y
+    );
+    await randomSquare.handle.click();
+  }
 };
 
 const main = async () => {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
-
   let page: Page | undefined;
+
+  const writeFailureScreenshot = async () => {
+    if (page != null) {
+      console.log("Fail, writing screenshot as fail.png!");
+      await writeFile("./fail.png", await page.screenshot());
+    }
+  };
+
+  process.on("SIGINT", () => {
+    console.log("SIGINT, writing screenshot as fail.png!");
+    writeFailureScreenshot().then(() => process.exit(1));
+  });
+  process.on("SIGNTERM", () => {
+    console.log("SIGTERM, writing screenshot as fail.png!");
+    writeFailureScreenshot().then(() => process.exit(1));
+  });
+
   try {
     page = await browser.newPage();
     const game = await startNewGame(page);
@@ -91,14 +168,12 @@ const main = async () => {
       // Parse the board to determine the current state.
       console.log("starting loop", turn);
       const board = await parseBoard(game);
+      console.log("  parsed board!");
       await doMove(board, turn);
     }
   } catch (error) {
     console.error(error);
-    if (page != null) {
-      console.log("Fail, writing screenshot as fail.png!");
-      await writeFile("./fail.png", await page.screenshot());
-    }
+    await writeFailureScreenshot();
     throw error;
   } finally {
     console.log("closing");
