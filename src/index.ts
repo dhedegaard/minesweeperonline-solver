@@ -33,7 +33,7 @@ const parseBoard = async (game: ElementHandle) =>
             case "square blank":
               return { type: "blank" } as const;
             case "square bombflagged":
-              return { type: "bomb" } as const;
+              return { type: "flag" } as const;
             case "square open0":
               return { type: "open", count: 0 } as const;
             case "square open1":
@@ -64,12 +64,12 @@ const doMove = async (
   // If it's the first turn, just click a random element.
   if (turn === 1) {
     const randomSquare = board[Math.floor(Math.random() * board.length)]!;
-    await randomSquare.handle.click();
     console.log(
-      "First turn, clicked random element!",
+      "First turn, clicking random element!",
       randomSquare.x,
       randomSquare.y
     );
+    await randomSquare.handle.click();
     return;
   }
 
@@ -88,7 +88,7 @@ const doMove = async (
         e.y >= y - 1 &&
         e.y <= y + 1 &&
         !(e.x === x && e.y === y) &&
-        (e.state.type === "blank" || e.state.type === "bomb")
+        (e.state.type === "blank" || e.state.type === "flag")
     );
     // There's the same number of adjacent non-open squares as the number, which
     // means everything around the current position is a bomb. Mark positions
@@ -97,7 +97,11 @@ const doMove = async (
       for (const adjacent of adjacentBlankSquares.filter(
         (e) => e.state.type === "blank"
       )) {
-        await adjacent.handle.click({ button: "right" });
+        await adjacent.handle.click({
+          button: "right",
+          delay: 100,
+          offset: { x: 2, y: 2 },
+        });
         hasChanged = true;
       }
     }
