@@ -118,19 +118,40 @@ const doMove = async (
     }
   }
 
-  // TODO: Implement various other strategies for determining safe actions to
-  // do without resorting to random moves.
-
-  // If something changed, just click all the open squares with numbers on it,
-  // to see if we can trigger a valid move.
-  if (hasChanged) {
-    console.log(
-      "Something changed, clicking all open squares with numbers on it"
+  // Look for open fields with numbers, where there's the same number of
+  // flagged bombs, and click on any excess adjacent blank squares.
+  for (const { state, x, y } of board) {
+    if (state.type !== "open" || state.count < 1) {
+      continue;
+    }
+    const adjacentSquares = board.filter(
+      (e) =>
+        e.x >= x - 1 &&
+        e.x <= x + 1 &&
+        e.y >= y - 1 &&
+        e.y <= y + 1 &&
+        !(e.x === x && e.y === y)
     );
-    for (const e of board.filter(
-      (e) => e.state.type === "open" && e.state.count > 0
-    )) {
-      await e.handle.click();
+
+    // Determine if the number of blank squares match the number - any flagged
+    // squares. If so, click the adjacent blank squares.
+    if (
+      state.count -
+        adjacentSquares.filter((e) => e.state.type === "flag").length ===
+      adjacentSquares.filter((e) => e.state.type === "blank").length
+    ) {
+      for (const adjacentBlank of adjacentSquares.filter(
+        (e) => e.state.type === "blank"
+      )) {
+        hasChanged = true;
+        await adjacentBlank.handle.click();
+        console.log(
+          "  Clicked square due to match in number and flags:",
+          adjacentBlank.x,
+          adjacentBlank.y,
+          adjacentBlank.state
+        );
+      }
     }
   }
 
