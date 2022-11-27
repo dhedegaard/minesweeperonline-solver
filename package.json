@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node -T src/index.ts"
+    "start": "ts-node -T src/index.ts",
+    "build": "tsc"
   },
   "engines": {
     "node": ">=18",

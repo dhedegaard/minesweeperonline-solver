@@ -88,9 +88,7 @@ const main = async () => {
       }
 
       // Iterate on all the elemnts and decide on whether to mark a bomb or click a field.
-      for (const e of board) {
-      }
-      throw new Error("TODO: what to do here?");
+      throw new Error("TODO: do something here :)");
     }
   } catch (error) {
     console.error(error);
