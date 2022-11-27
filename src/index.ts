@@ -46,6 +46,12 @@ const parseBoard = async (game: ElementHandle) =>
               return { type: "open", count: 4 } as const;
             case "square open5":
               return { type: "open", count: 5 } as const;
+            case "square open6":
+              return { type: "open", count: 6 } as const;
+            case "square open7":
+              return { type: "open", count: 7 } as const;
+            case "square open8":
+              return { type: "open", count: 8 } as const;
             case "square bombdeath":
               throw new Error("You died!");
             default:
