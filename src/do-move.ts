@@ -80,10 +80,15 @@ export const doMove = async (
 
     // Determine if the number of blank squares match the number - any flagged
     // squares. If so, click the adjacent blank squares.
+    const adjacentFlags = adjacentSquares.filter(
+      (e) => e.state.type === "flag"
+    ).length;
+    const adjacentBlanks = adjacentSquares.filter(
+      (e) => e.state.type === "blank"
+    ).length;
     if (
-      state.count -
-        adjacentSquares.filter((e) => e.state.type === "flag").length ===
-      adjacentSquares.filter((e) => e.state.type === "blank").length
+      state.count - adjacentFlags === adjacentBlanks ||
+      state.count - adjacentFlags === 0
     ) {
       for (const adjacentBlank of adjacentSquares.filter(
         (e) => e.state.type === "blank"
@@ -96,6 +101,8 @@ export const doMove = async (
           adjacentBlank.y,
           adjacentBlank.state
         );
+        // For now just return and tick the next turn. Optimize later.
+        return;
       }
     }
   }
