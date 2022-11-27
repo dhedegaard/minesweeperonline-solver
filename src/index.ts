@@ -93,8 +93,8 @@ const main = async () => {
   } catch (error) {
     console.error(error);
     if (page != null) {
-      console.log("writing hest!");
-      await writeFile("./hest.png", await page.screenshot());
+      console.log("Fail, writing screenshot as fail.png!");
+      await writeFile("./fail.png", await page.screenshot());
     }
     throw error;
   } finally {
