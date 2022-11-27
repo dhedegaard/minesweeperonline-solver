@@ -4,9 +4,7 @@ import puppeteer, { ElementHandle, Page } from "puppeteer";
 const START_URL = "https://minesweeperonline.com/";
 
 const startNewGame = async (page: Page) => {
-  await page.goto(START_URL, {
-    waitUntil: "networkidle2",
-  });
+  await page.goto(START_URL);
   const game = await page.waitForSelector("#game", {
     timeout: 5_000,
   });
@@ -57,9 +55,28 @@ const parseBoard = async (game: ElementHandle) =>
     )
   );
 
+const doMove = async (
+  board: ReturnType<typeof parseBoard> extends PromiseLike<infer U> ? U : never,
+  turn: number
+) => {
+  // If it's the first turn, just click a random element.
+  if (turn === 1) {
+    const randomSquare = board[Math.floor(Math.random() * board.length)]!;
+    await randomSquare.handle.click();
+    console.log(
+      "First turn, clicked random element!",
+      randomSquare.x,
+      randomSquare.y
+    );
+    return;
+  }
+
+  // Iterate on all the elemnts and decide on whether to mark a bomb or click a field.
+  throw new Error("TODO: do something here :)");
+};
+
 const main = async () => {
   const browser = await puppeteer.launch({
-    headless: process.env["NODE_ENV"] !== "production",
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
@@ -74,21 +91,7 @@ const main = async () => {
       // Parse the board to determine the current state.
       console.log("starting loop", turn);
       const board = await parseBoard(game);
-
-      // If it's the first turn, just click a random element.
-      if (turn === 1) {
-        const randomSquare = board[Math.floor(Math.random() * board.length)]!;
-        await randomSquare.handle.click();
-        console.log(
-          "First turn, clicked random element!",
-          randomSquare.x,
-          randomSquare.y
-        );
-        continue;
-      }
-
-      // Iterate on all the elemnts and decide on whether to mark a bomb or click a field.
-      throw new Error("TODO: do something here :)");
+      await doMove(board, turn);
     }
   } catch (error) {
     console.error(error);
