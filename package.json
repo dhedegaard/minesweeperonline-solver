@@ -1,0 +1,24 @@
+{
+  "name": "minesweeper-online-solver",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node -T src/index.ts"
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^18.11.9",
+    "puppeteer": "^19.3.0",
+    "typescript": "^4.9.3"
+  },
+  "devDependencies": {
+    "@tsconfig/node-lts-strictest": "^18.12.1",
+    "ts-node": "^10.9.1"
+  }
+}
