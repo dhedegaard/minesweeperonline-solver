@@ -102,6 +102,12 @@ const doMove = async (
           delay: 100,
           offset: { x: 2, y: 2 },
         });
+        console.log(
+          "  Flagged position: ",
+          adjacent.x,
+          adjacent.y,
+          adjacent.state
+        );
         hasChanged = true;
       }
     }
